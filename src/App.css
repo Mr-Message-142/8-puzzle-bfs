@@ -1,0 +1,275 @@
+/* =========================
+   RESET
+========================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #667eea,
+    #764ba2
+  );
+}
+
+/* =========================
+   APP
+========================= */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+}
+
+.game-container {
+  width: 450px;
+  max-width: 100%;
+  background: white;
+  padding: 30px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================
+   HEADING
+========================= */
+
+h1 {
+  color: #222;
+  margin-bottom: 8px;
+  font-size: 30px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 25px;
+  font-size: 16px;
+}
+
+/* =========================
+   STATS
+========================= */
+
+.stats {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-box {
+  flex: 1;
+  background: #f3f4f6;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.stat-box span {
+  display: block;
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.stat-box strong {
+  font-size: 24px;
+  color: #222;
+}
+
+/* =========================
+   PUZZLE BOARD
+========================= */
+
+.puzzle-board {
+  width: 330px;
+  max-width: 100%;
+  margin: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+/* =========================
+   PUZZLE TILE
+========================= */
+
+.tile {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.tile:hover:not(:disabled) {
+  background: #2563eb;
+  transform: scale(1.05);
+}
+
+.tile.empty {
+  background: #e5e7eb;
+  cursor: default;
+}
+
+/* =========================
+   MESSAGE
+========================= */
+
+.message {
+  margin: 25px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* =========================
+   BUTTON CONTAINER
+========================= */
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px 0 25px;
+}
+
+/* =========================
+   ALL BUTTONS
+========================= */
+
+.buttons button {
+  border: none !important;
+  outline: none;
+  padding: 13px 20px;
+  border-radius: 10px;
+  color: white !important;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition:
+    transform 0.2s,
+    background-color 0.2s;
+}
+
+/* =========================
+   SHUFFLE - BLUE
+========================= */
+
+.buttons .primary-btn {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.buttons .primary-btn:hover {
+  background-color: #1d4ed8 !important;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   BFS - PURPLE
+========================= */
+
+.buttons .secondary-btn {
+  background-color: #9333ea !important;
+  color: white !important;
+}
+
+.buttons .secondary-btn:hover {
+  background-color: #7e22ce !important;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   RESET - RED
+========================= */
+
+.buttons .reset-btn {
+  background-color: #ef4444 !important;
+  color: white !important;
+}
+
+.buttons .reset-btn:hover {
+  background-color: #dc2626 !important;
+  transform: translateY(-2px);
+}
+
+/* =========================
+   DISABLED BUTTON
+========================= */
+
+.buttons button:disabled {
+  background-color: #9ca3af !important;
+  color: white !important;
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+/* =========================
+   INFO
+========================= */
+
+.info {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: left;
+}
+
+.info h3 {
+  text-align: center;
+  color: #222;
+  margin-bottom: 15px;
+}
+
+.info p {
+  color: #555;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 500px) {
+  .app {
+    padding: 15px;
+  }
+
+  .game-container {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 25px;
+  }
+
+  .puzzle-board {
+    width: 100%;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .buttons button {
+    width: 100%;
+  }
+}
