@@ -45,7 +45,7 @@ export function bfsSolver(initialState) {
     return {
       path: [initialState],
       nodesExplored: 1,
-      statesGenerated: 1,
+      statesGenerated: 0,
       executionTime: performance.now() - startTime,
       solutionDepth: 0,
     };

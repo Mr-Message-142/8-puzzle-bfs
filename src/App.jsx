@@ -1,25 +1,36 @@
 import { useEffect, useState } from "react";
-import PuzzleBoard from "./components/PuzzleBoard";
 import { bfsSolver } from "./utils/bfsSolver";
 import "./App.css";
 
-const GOAL = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+const GOAL_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 
-function isSolved(board) {
-  return board.every((value, index) => value === GOAL[index]);
-}
+const DIFFICULTIES = {
+  Easy: {
+    moves: 10,
+    description: "Simple puzzle",
+  },
+  Medium: {
+    moves: 25,
+    description: "Moderate puzzle",
+  },
+  Hard: {
+    moves: 50,
+    description: "Challenging puzzle",
+  },
+};
 
 function App() {
-  const [board, setBoard] = useState(GOAL);
+  const [puzzle, setPuzzle] = useState(GOAL_STATE);
+
   const [moves, setMoves] = useState(0);
+
   const [time, setTime] = useState(0);
 
-  const [running, setRunning] = useState(false);
-  const [solving, setSolving] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
-  const [message, setMessage] = useState(
-    "Arrange the tiles!"
-  );
+  const [isSolving, setIsSolving] = useState(false);
+
+  const [difficulty, setDifficulty] = useState("Medium");
 
   const [bfsStats, setBfsStats] = useState({
     nodesExplored: 0,
@@ -28,161 +39,215 @@ function App() {
     solutionDepth: 0,
   });
 
-  // -----------------------------------------
-  // TIMER
-  // -----------------------------------------
+  const isSolved = puzzle.every(
+    (value, index) => value === GOAL_STATE[index]
+  );
 
+  /*
+   * Timer
+   */
   useEffect(() => {
-    if (!running || solving) {
-      return;
+    let interval;
+
+    if (isRunning && !isSolved && !isSolving) {
+      interval = setInterval(() => {
+        setTime((previousTime) => previousTime + 1);
+      }, 1000);
     }
 
-    const timer = setInterval(() => {
-      setTime((previousTime) => previousTime + 1);
-    }, 1000);
+    return () => clearInterval(interval);
+  }, [isRunning, isSolved, isSolving]);
 
-    return () => clearInterval(timer);
-  }, [running, solving]);
+  /*
+   * Format timer
+   */
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
 
-  // -----------------------------------------
-  // MOVE TILE
-  // -----------------------------------------
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds
+    ).padStart(2, "0")}`;
+  };
 
+  /*
+   * Check whether two puzzles are equal
+   */
+  const samePuzzle = (first, second) => {
+    return first.every((value, index) => value === second[index]);
+  };
+
+  /*
+   * Get valid movements
+   */
+  const getValidMoves = (currentPuzzle) => {
+    const emptyIndex = currentPuzzle.indexOf(0);
+
+    const row = Math.floor(emptyIndex / 3);
+    const col = emptyIndex % 3;
+
+    const validIndexes = [];
+
+    if (row > 0) {
+      validIndexes.push(emptyIndex - 3);
+    }
+
+    if (row < 2) {
+      validIndexes.push(emptyIndex + 3);
+    }
+
+    if (col > 0) {
+      validIndexes.push(emptyIndex - 1);
+    }
+
+    if (col < 2) {
+      validIndexes.push(emptyIndex + 1);
+    }
+
+    return validIndexes;
+  };
+
+  /*
+   * Generate puzzle by making valid moves
+   * from the solved state.
+   *
+   * Because every generated puzzle comes
+   * from the solved state using legal moves,
+   * it is always solvable.
+   */
+  const generatePuzzle = (numberOfMoves) => {
+    let newPuzzle = [...GOAL_STATE];
+
+    let previousEmptyIndex = -1;
+
+    for (let i = 0; i < numberOfMoves; i++) {
+      const validMoves = getValidMoves(newPuzzle);
+
+      const possibleMoves = validMoves.filter(
+        (index) => index !== previousEmptyIndex
+      );
+
+      const randomIndex =
+        possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+
+      const emptyIndex = newPuzzle.indexOf(0);
+
+      const updatedPuzzle = [...newPuzzle];
+
+      updatedPuzzle[emptyIndex] = updatedPuzzle[randomIndex];
+      updatedPuzzle[randomIndex] = 0;
+
+      previousEmptyIndex = emptyIndex;
+
+      newPuzzle = updatedPuzzle;
+    }
+
+    /*
+     * Avoid accidentally generating solved state.
+     */
+    if (samePuzzle(newPuzzle, GOAL_STATE)) {
+      return generatePuzzle(numberOfMoves);
+    }
+
+    return newPuzzle;
+  };
+
+  /*
+   * Shuffle puzzle according to difficulty
+   */
+  const shufflePuzzle = () => {
+    if (isSolving) return;
+
+    const shuffleMoves = DIFFICULTIES[difficulty].moves;
+
+    const newPuzzle = generatePuzzle(shuffleMoves);
+
+    setPuzzle(newPuzzle);
+
+    setMoves(0);
+    setTime(0);
+
+    setIsRunning(false);
+
+    setBfsStats({
+      nodesExplored: 0,
+      statesGenerated: 0,
+      executionTime: 0,
+      solutionDepth: 0,
+    });
+  };
+
+  /*
+   * Change difficulty
+   */
+  const handleDifficultyChange = (newDifficulty) => {
+    if (isSolving) return;
+
+    setDifficulty(newDifficulty);
+
+    const shuffleMoves = DIFFICULTIES[newDifficulty].moves;
+
+    const newPuzzle = generatePuzzle(shuffleMoves);
+
+    setPuzzle(newPuzzle);
+
+    setMoves(0);
+    setTime(0);
+
+    setIsRunning(false);
+
+    setBfsStats({
+      nodesExplored: 0,
+      statesGenerated: 0,
+      executionTime: 0,
+      solutionDepth: 0,
+    });
+  };
+
+  /*
+   * Move tile
+   */
   const moveTile = (index) => {
-    if (solving) {
+    if (isSolving) return;
+
+    const emptyIndex = puzzle.indexOf(0);
+
+    const validMoves = getValidMoves(puzzle);
+
+    if (!validMoves.includes(index)) {
       return;
     }
 
-    const emptyIndex = board.indexOf(0);
+    const newPuzzle = [...puzzle];
 
-    const tileRow = Math.floor(index / 3);
-    const tileCol = index % 3;
+    newPuzzle[emptyIndex] = newPuzzle[index];
+    newPuzzle[index] = 0;
 
-    const emptyRow = Math.floor(emptyIndex / 3);
-    const emptyCol = emptyIndex % 3;
+    setPuzzle(newPuzzle);
 
-    const distance =
-      Math.abs(tileRow - emptyRow) +
-      Math.abs(tileCol - emptyCol);
-
-    // Tile must be next to empty space
-    if (distance !== 1) {
-      return;
-    }
-
-    const nextBoard = [...board];
-
-    [nextBoard[index], nextBoard[emptyIndex]] = [
-      nextBoard[emptyIndex],
-      nextBoard[index],
-    ];
-
-    setBoard(nextBoard);
     setMoves((previousMoves) => previousMoves + 1);
-    setRunning(true);
 
-    if (isSolved(nextBoard)) {
-      setMessage("🎉 Puzzle Solved!");
-      setRunning(false);
-    } else {
-      setMessage("Keep going!");
+    if (!isRunning) {
+      setIsRunning(true);
+    }
+
+    if (newPuzzle.every((value, i) => value === GOAL_STATE[i])) {
+      setIsRunning(false);
     }
   };
 
-  // -----------------------------------------
-  // SHUFFLE
-  // -----------------------------------------
+  /*
+   * Reset to solved state
+   */
+  const resetGame = () => {
+    if (isSolving) return;
 
-  const shuffle = () => {
-    if (solving) {
-      return;
-    }
+    setPuzzle(GOAL_STATE);
 
-    let nextBoard = [...GOAL];
-
-    let previousEmpty = -1;
-
-    // Make 100 valid random moves.
-    // Because we start from the goal and only make
-    // valid moves, the resulting puzzle is solvable.
-    for (let i = 0; i < 100; i++) {
-      const emptyIndex = nextBoard.indexOf(0);
-
-      const row = Math.floor(emptyIndex / 3);
-      const col = emptyIndex % 3;
-
-      const possibleMoves = [];
-
-      if (row > 0) {
-        possibleMoves.push(emptyIndex - 3);
-      }
-
-      if (row < 2) {
-        possibleMoves.push(emptyIndex + 3);
-      }
-
-      if (col > 0) {
-        possibleMoves.push(emptyIndex - 1);
-      }
-
-      if (col < 2) {
-        possibleMoves.push(emptyIndex + 1);
-      }
-
-      // Avoid immediately reversing the previous move
-      const validMoves = possibleMoves.filter(
-        (position) => position !== previousEmpty
-      );
-
-      const movesToUse =
-        validMoves.length > 0
-          ? validMoves
-          : possibleMoves;
-
-      const randomPosition =
-        movesToUse[
-          Math.floor(Math.random() * movesToUse.length)
-        ];
-
-      previousEmpty = emptyIndex;
-
-      [nextBoard[emptyIndex], nextBoard[randomPosition]] = [
-        nextBoard[randomPosition],
-        nextBoard[emptyIndex],
-      ];
-    }
-
-    setBoard(nextBoard);
     setMoves(0);
     setTime(0);
-    setRunning(false);
-    setSolving(false);
 
-    // Clear previous BFS statistics
-    setBfsStats({
-      nodesExplored: 0,
-      statesGenerated: 0,
-      executionTime: 0,
-      solutionDepth: 0,
-    });
-
-    setMessage("Puzzle shuffled! Start solving.");
-  };
-
-  // -----------------------------------------
-  // RESET
-  // -----------------------------------------
-
-  const reset = () => {
-    if (solving) {
-      return;
-    }
-
-    setBoard(GOAL);
-    setMoves(0);
-    setTime(0);
-    setRunning(false);
-    setSolving(false);
+    setIsRunning(false);
 
     setBfsStats({
       nodesExplored: 0,
@@ -190,279 +255,242 @@ function App() {
       executionTime: 0,
       solutionDepth: 0,
     });
-
-    setMessage("Arrange the tiles!");
   };
 
-  // -----------------------------------------
-  // BFS SOLVER
-  // -----------------------------------------
-
+  /*
+   * BFS Solver
+   */
   const solvePuzzle = async () => {
-    if (solving) {
+    if (isSolving || isSolved) return;
+
+    setIsSolving(true);
+    setIsRunning(false);
+
+    const startState = puzzle.join("");
+
+    const result = bfsSolver(startState);
+
+    setBfsStats({
+      nodesExplored: result.nodesExplored,
+      statesGenerated: result.statesGenerated,
+      executionTime: result.executionTime,
+      solutionDepth: result.solutionDepth,
+    });
+
+    if (result.path.length === 0) {
+      setIsSolving(false);
       return;
     }
 
-    // Already solved
-    if (isSolved(board)) {
-      setMessage("✅ Puzzle is already solved!");
-      return;
+    for (let i = 1; i < result.path.length; i++) {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      setPuzzle(result.path[i].split("").map(Number));
     }
 
-    setSolving(true);
-    setRunning(false);
-    setMessage("🧠 BFS is searching for the shortest path...");
-
-    // Convert:
-    // [1,2,3,4,5,6,7,8,0]
-    //
-    // to:
-    // "123456780"
-
-    const initialState = board.join("");
-
-    try {
-      // Run your existing BFS solver
-      const result = bfsSolver(initialState);
-
-      // Store BFS statistics
-      setBfsStats({
-        nodesExplored: result.nodesExplored,
-        statesGenerated: result.statesGenerated,
-        executionTime: result.executionTime,
-        solutionDepth: result.solutionDepth,
-      });
-
-      // No solution
-      if (!result.path || result.path.length === 0) {
-        setMessage("❌ No solution found.");
-        setSolving(false);
-        return;
-      }
-
-      setMessage(
-        `🧠 BFS found a solution in ${result.solutionDepth} moves!`
-      );
-
-      // Animate solution
-      for (let i = 1; i < result.path.length; i++) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, 400)
-        );
-
-        const nextState = result.path[i];
-
-        // Convert:
-        // "123456780"
-        //
-        // to:
-        // [1,2,3,4,5,6,7,8,0]
-
-        const nextBoard = nextState
-          .split("")
-          .map(Number);
-
-        setBoard(nextBoard);
-      }
-
-      setMoves((previousMoves) => {
-        return previousMoves + result.solutionDepth;
-      });
-
-      setRunning(false);
-      setMessage("🎉 BFS solved the puzzle!");
-
-    } catch (error) {
-      console.error("BFS Solver Error:", error);
-
-      setMessage(
-        "❌ Error occurred while running BFS."
-      );
-    } finally {
-      setSolving(false);
-    }
+    setIsSolving(false);
   };
 
-  // -----------------------------------------
-  // TIMER FORMAT
-  // -----------------------------------------
+  /*
+   * Start with Medium puzzle
+   */
+  useEffect(() => {
+    const initialPuzzle = generatePuzzle(
+      DIFFICULTIES.Medium.moves
+    );
 
-  const minutes = String(
-    Math.floor(time / 60)
-  ).padStart(2, "0");
-
-  const seconds = String(
-    time % 60
-  ).padStart(2, "0");
-
-  // -----------------------------------------
-  // UI
-  // -----------------------------------------
+    setPuzzle(initialPuzzle);
+  }, []);
 
   return (
     <div className="app">
-
       <div className="game-container">
 
-        {/* TITLE */}
+        <header className="header">
+          <h1>8-Puzzle BFS</h1>
 
-        <h1>🧩 8 Puzzle Game</h1>
+          <p>
+            Solve the classic 8-puzzle using
+            Breadth-First Search
+          </p>
+        </header>
 
-        <p className="subtitle">
-          React + Breadth-First Search (BFS)
-        </p>
+        {/* Difficulty */}
+        <section className="difficulty-section">
 
-        {/* GAME STATISTICS */}
+          <h2>Difficulty</h2>
 
-        <div className="stats">
+          <div className="difficulty-buttons">
 
-          <div className="stat-box">
-            <span>Moves</span>
+            {Object.keys(DIFFICULTIES).map((level) => (
+              <button
+                key={level}
+                className={`difficulty-button ${
+                  difficulty === level ? "active" : ""
+                }`}
+                onClick={() =>
+                  handleDifficultyChange(level)
+                }
+                disabled={isSolving}
+              >
+                {level}
+              </button>
+            ))}
 
-            <strong>
-              {moves}
-            </strong>
           </div>
 
-          <div className="stat-box">
-            <span>Time</span>
+          <p className="difficulty-description">
+            {DIFFICULTIES[difficulty].description}
+          </p>
 
-            <strong>
-              {minutes}:{seconds}
-            </strong>
+        </section>
+
+        {/* Game Stats */}
+        <div className="game-stats">
+
+          <div className="game-stat">
+            <span>Moves</span>
+            <strong>{moves}</strong>
+          </div>
+
+          <div className="game-stat">
+            <span>Time</span>
+            <strong>{formatTime(time)}</strong>
+          </div>
+
+          <div className="game-stat">
+            <span>Difficulty</span>
+            <strong>{difficulty}</strong>
           </div>
 
         </div>
 
-        {/* PUZZLE */}
+        {/* Puzzle Board */}
+        <div className="puzzle-board">
 
-        <PuzzleBoard
-          board={board}
-          onTileClick={moveTile}
-          disabled={solving}
-        />
+          {puzzle.map((value, index) => (
+            <button
+              key={index}
+              className={`tile ${
+                value === 0 ? "empty" : ""
+              }`}
+              onClick={() => moveTile(index)}
+              disabled={isSolving || value === 0}
+            >
+              {value !== 0 ? value : ""}
+            </button>
+          ))}
 
-        {/* MESSAGE */}
+        </div>
 
-        <p className="message">
-          {message}
-        </p>
+        {/* Game Status */}
+        {isSolved && !isSolving && (
+          <div className="success-message">
+            🎉 Puzzle Solved!
+          </div>
+        )}
 
-        {/* BUTTONS */}
+        {isSolving && (
+          <div className="solving-message">
+            🧠 BFS is solving the puzzle...
+          </div>
+        )}
 
-        <div className="buttons">
+        {/* Controls */}
+        <div className="controls">
 
           <button
-            className="primary-btn"
-            onClick={shuffle}
-            disabled={solving}
+            className="primary-button"
+            onClick={shufflePuzzle}
+            disabled={isSolving}
           >
             🔀 Shuffle
           </button>
 
           <button
-            className="secondary-btn"
-            onClick={solvePuzzle}
-            disabled={solving}
-          >
-            {solving
-              ? "🧠 Solving..."
-              : "🧠 Solve with BFS"}
-          </button>
-
-          <button
-            className="reset-btn"
-            onClick={reset}
-            disabled={solving}
+            className="secondary-button"
+            onClick={resetGame}
+            disabled={isSolving}
           >
             🔄 Reset
           </button>
 
+          <button
+            className="solve-button"
+            onClick={solvePuzzle}
+            disabled={isSolving || isSolved}
+          >
+            🧠 Solve with BFS
+          </button>
+
         </div>
 
-        {/* BFS STATISTICS */}
+        {/* BFS Statistics */}
+        <section className="bfs-section">
 
-        <div className="bfs-stats">
+          <h2>BFS Statistics</h2>
 
-          <h3>🧠 BFS Statistics</h3>
+          <div className="bfs-stats">
 
-          <div className="bfs-grid">
-
-            <div className="bfs-stat-box">
-
-              <span>
-                Nodes Explored
-              </span>
-
+            <div className="stat-card">
+              <span>Nodes Explored</span>
               <strong>
                 {bfsStats.nodesExplored}
               </strong>
-
             </div>
 
-            <div className="bfs-stat-box">
-
-              <span>
-                States Generated
-              </span>
-
+            <div className="stat-card">
+              <span>States Generated</span>
               <strong>
                 {bfsStats.statesGenerated}
               </strong>
-
             </div>
 
-            <div className="bfs-stat-box">
-
-              <span>
-                Solution Depth
-              </span>
-
+            <div className="stat-card">
+              <span>Solution Depth</span>
               <strong>
                 {bfsStats.solutionDepth}
               </strong>
-
             </div>
 
-            <div className="bfs-stat-box">
-
-              <span>
-                Execution Time
-              </span>
-
+            <div className="stat-card">
+              <span>BFS Time</span>
               <strong>
                 {bfsStats.executionTime.toFixed(2)} ms
               </strong>
-
             </div>
 
           </div>
 
-        </div>
+        </section>
 
-        {/* INSTRUCTIONS */}
+        {/* Information */}
+        <section className="info-section">
 
-        <div className="info">
-
-          <h3>How to Play</h3>
-
-          <p>
-            Click a tile next to the empty space.
-          </p>
+          <h2>About BFS</h2>
 
           <p>
-            Arrange the numbers from 1 to 8.
+            Breadth-First Search explores puzzle states
+            level by level. Because every tile movement
+            has the same cost, BFS guarantees the shortest
+            solution path.
           </p>
 
-          <p>
-            Use <b>Solve with BFS</b> to automatically
-            find the shortest solution.
-          </p>
+          <div className="bfs-flow">
 
-        </div>
+            <span>Initial State</span>
+            <span>→</span>
+            <span>Queue</span>
+            <span>→</span>
+            <span>Generate States</span>
+            <span>→</span>
+            <span>Goal</span>
+
+          </div>
+
+        </section>
 
       </div>
-
     </div>
   );
 }
