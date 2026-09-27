@@ -1,63 +1,112 @@
-const GOAL = "123456780";
+const GOAL_STATE = "123456780";
 
-export const isSolved = (board) =>
-  board.join("") === GOAL;
+function getNeighbors(state) {
+  const neighbors = [];
 
-const neighbors = (state) => {
-  const result = [];
-  const zero = state.indexOf("0");
-  const row = Math.floor(zero / 3);
-  const col = zero % 3;
+  const zeroIndex = state.indexOf("0");
+  const row = Math.floor(zeroIndex / 3);
+  const col = zeroIndex % 3;
 
-  const moves = [];
+  const moves = [
+    { row: -1, col: 0 },
+    { row: 1, col: 0 },
+    { row: 0, col: -1 },
+    { row: 0, col: 1 },
+  ];
 
-  if (row > 0) moves.push(zero - 3);
-  if (row < 2) moves.push(zero + 3);
-  if (col > 0) moves.push(zero - 1);
-  if (col < 2) moves.push(zero + 1);
+  for (const move of moves) {
+    const newRow = row + move.row;
+    const newCol = col + move.col;
 
-  moves.forEach((pos) => {
-    const arr = state.split("");
-    [arr[zero], arr[pos]] = [arr[pos], arr[zero]];
-    result.push(arr.join(""));
-  });
+    if (
+      newRow >= 0 &&
+      newRow < 3 &&
+      newCol >= 0 &&
+      newCol < 3
+    ) {
+      const newIndex = newRow * 3 + newCol;
 
-  return result;
-};
+      const newState = state.split("");
 
-export const solveWithBFS = (board) => {
-  const start = board.join("");
+      newState[zeroIndex] = newState[newIndex];
+      newState[newIndex] = "0";
 
-  if (start === GOAL) return [board];
-
-  const queue = [start];
-  const visited = new Set([start]);
-  const parent = new Map([[start, null]]);
-
-  for (let i = 0; i < queue.length; i++) {
-    const current = queue[i];
-
-    for (const next of neighbors(current)) {
-      if (visited.has(next)) continue;
-
-      visited.add(next);
-      parent.set(next, current);
-
-      if (next === GOAL) {
-        const path = [];
-        let state = next;
-
-        while (state) {
-          path.push(state.split("").map(Number));
-          state = parent.get(state);
-        }
-
-        return path.reverse();
-      }
-
-      queue.push(next);
+      neighbors.push(newState.join(""));
     }
   }
 
-  return null;
-};
+  return neighbors;
+}
+
+export function bfsSolver(initialState) {
+  const startTime = performance.now();
+
+  if (initialState === GOAL_STATE) {
+    return {
+      path: [initialState],
+      nodesExplored: 1,
+      statesGenerated: 1,
+      executionTime: performance.now() - startTime,
+      solutionDepth: 0,
+    };
+  }
+
+  const queue = [initialState];
+  let queueIndex = 0;
+
+  const visited = new Set();
+  const parent = new Map();
+
+  visited.add(initialState);
+
+  let nodesExplored = 0;
+  let statesGenerated = 0;
+
+  while (queueIndex < queue.length) {
+    const currentState = queue[queueIndex];
+    queueIndex++;
+
+    nodesExplored++;
+
+    if (currentState === GOAL_STATE) {
+      const path = [];
+
+      let current = currentState;
+
+      while (current !== undefined) {
+        path.push(current);
+        current = parent.get(current);
+      }
+
+      path.reverse();
+
+      return {
+        path,
+        nodesExplored,
+        statesGenerated,
+        executionTime: performance.now() - startTime,
+        solutionDepth: path.length - 1,
+      };
+    }
+
+    const neighbors = getNeighbors(currentState);
+
+    statesGenerated += neighbors.length;
+
+    for (const neighbor of neighbors) {
+      if (!visited.has(neighbor)) {
+        visited.add(neighbor);
+        parent.set(neighbor, currentState);
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return {
+    path: [],
+    nodesExplored,
+    statesGenerated,
+    executionTime: performance.now() - startTime,
+    solutionDepth: 0,
+  };
+}
