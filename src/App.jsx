@@ -7,21 +7,23 @@ const GOAL_STATE = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 const DIFFICULTIES = {
   Easy: {
     moves: 10,
-    description: "Simple puzzle",
+    description: "Perfect for beginners",
+    icon: "🌱",
   },
   Medium: {
     moves: 25,
-    description: "Moderate puzzle",
+    description: "Balanced challenge",
+    icon: "⚡",
   },
   Hard: {
     moves: 50,
-    description: "Challenging puzzle",
+    description: "For puzzle experts",
+    icon: "🔥",
   },
 };
 
 function App() {
   const [puzzle, setPuzzle] = useState(GOAL_STATE);
-
   const [moves, setMoves] = useState(0);
   const [time, setTime] = useState(0);
 
@@ -34,8 +36,8 @@ function App() {
   const [solveStep, setSolveStep] = useState(0);
   const [totalSolveSteps, setTotalSolveSteps] = useState(0);
 
-  const [solverStatus, setSolverStatus] =
-    useState("Ready");
+  const [solverStatus, setSolverStatus] = useState("Ready");
+  const [showHelp, setShowHelp] = useState(false);
 
   const [bfsStats, setBfsStats] = useState({
     nodesExplored: 0,
@@ -50,8 +52,6 @@ function App() {
   const isSolved = puzzle.every(
     (value, index) => value === GOAL_STATE[index]
   );
-
-  /* ---------------- TIMER ---------------- */
 
   useEffect(() => {
     let interval;
@@ -74,8 +74,6 @@ function App() {
     ).padStart(2, "0")}`;
   };
 
-  /* ---------------- PUZZLE HELPERS ---------------- */
-
   const samePuzzle = (first, second) => {
     return first.every(
       (value, index) => value === second[index]
@@ -90,28 +88,16 @@ function App() {
 
     const validIndexes = [];
 
-    if (row > 0) {
-      validIndexes.push(emptyIndex - 3);
-    }
-
-    if (row < 2) {
-      validIndexes.push(emptyIndex + 3);
-    }
-
-    if (col > 0) {
-      validIndexes.push(emptyIndex - 1);
-    }
-
-    if (col < 2) {
-      validIndexes.push(emptyIndex + 1);
-    }
+    if (row > 0) validIndexes.push(emptyIndex - 3);
+    if (row < 2) validIndexes.push(emptyIndex + 3);
+    if (col > 0) validIndexes.push(emptyIndex - 1);
+    if (col < 2) validIndexes.push(emptyIndex + 1);
 
     return validIndexes;
   };
 
   const generatePuzzle = (numberOfMoves) => {
     let newPuzzle = [...GOAL_STATE];
-
     let previousEmptyIndex = -1;
 
     for (let i = 0; i < numberOfMoves; i++) {
@@ -123,22 +109,17 @@ function App() {
 
       const randomIndex =
         possibleMoves[
-          Math.floor(
-            Math.random() * possibleMoves.length
-          )
+          Math.floor(Math.random() * possibleMoves.length)
         ];
 
       const emptyIndex = newPuzzle.indexOf(0);
 
       const updatedPuzzle = [...newPuzzle];
 
-      updatedPuzzle[emptyIndex] =
-        updatedPuzzle[randomIndex];
-
+      updatedPuzzle[emptyIndex] = updatedPuzzle[randomIndex];
       updatedPuzzle[randomIndex] = 0;
 
       previousEmptyIndex = emptyIndex;
-
       newPuzzle = updatedPuzzle;
     }
 
@@ -148,8 +129,6 @@ function App() {
 
     return newPuzzle;
   };
-
-  /* ---------------- RESET STATISTICS ---------------- */
 
   const resetBfsStats = () => {
     setBfsStats({
@@ -163,8 +142,6 @@ function App() {
     setTotalSolveSteps(0);
   };
 
-  /* ---------------- SHUFFLE ---------------- */
-
   const shufflePuzzle = () => {
     if (isSolving) return;
 
@@ -176,19 +153,14 @@ function App() {
     );
 
     setPuzzle(newPuzzle);
-
     setMoves(0);
     setTime(0);
-
     setIsRunning(false);
     setIsPaused(false);
-
     setSolverStatus("Ready");
 
     resetBfsStats();
   };
-
-  /* ---------------- DIFFICULTY ---------------- */
 
   const handleDifficultyChange = (newDifficulty) => {
     if (isSolving) return;
@@ -203,30 +175,22 @@ function App() {
     );
 
     setPuzzle(newPuzzle);
-
     setMoves(0);
     setTime(0);
-
     setIsRunning(false);
     setIsPaused(false);
-
     setSolverStatus("Ready");
 
     resetBfsStats();
   };
 
-  /* ---------------- MANUAL MOVE ---------------- */
-
   const moveTile = (index) => {
     if (isSolving) return;
 
     const emptyIndex = puzzle.indexOf(0);
-
     const validMoves = getValidMoves(puzzle);
 
-    if (!validMoves.includes(index)) {
-      return;
-    }
+    if (!validMoves.includes(index)) return;
 
     const newPuzzle = [...puzzle];
 
@@ -234,7 +198,6 @@ function App() {
     newPuzzle[index] = 0;
 
     setPuzzle(newPuzzle);
-
     setMoves((previous) => previous + 1);
 
     if (!isRunning) {
@@ -251,8 +214,6 @@ function App() {
     }
   };
 
-  /* ---------------- RESET GAME ---------------- */
-
   const resetGame = () => {
     if (isSolving) return;
 
@@ -260,19 +221,14 @@ function App() {
     isPausedRef.current = false;
 
     setPuzzle(GOAL_STATE);
-
     setMoves(0);
     setTime(0);
-
     setIsRunning(false);
     setIsPaused(false);
-
     setSolverStatus("Ready");
 
     resetBfsStats();
   };
-
-  /* ---------------- BFS SOLVER ---------------- */
 
   const solvePuzzle = async () => {
     if (isSolving || isSolved) return;
@@ -283,7 +239,6 @@ function App() {
     setIsSolving(true);
     setIsPaused(false);
     setIsRunning(false);
-
     setSolverStatus("Searching...");
 
     setSolveStep(0);
@@ -309,11 +264,9 @@ function App() {
     const totalSteps = result.path.length - 1;
 
     setTotalSolveSteps(totalSteps);
-
     setSolverStatus("Solution found");
 
     for (let i = 1; i < result.path.length; i++) {
-
       if (stopRequested.current) {
         setSolverStatus("Solver stopped");
         setIsSolving(false);
@@ -322,7 +275,6 @@ function App() {
       }
 
       while (isPausedRef.current) {
-
         if (stopRequested.current) {
           setSolverStatus("Solver stopped");
           setIsSolving(false);
@@ -353,51 +305,36 @@ function App() {
     }
 
     setSolverStatus("Puzzle solved!");
-
     setIsSolving(false);
     setIsPaused(false);
   };
-
-  /* ---------------- PAUSE ---------------- */
 
   const pauseSolver = () => {
     if (!isSolving || isPaused) return;
 
     isPausedRef.current = true;
-
     setIsPaused(true);
-
     setSolverStatus("Paused");
   };
-
-  /* ---------------- RESUME ---------------- */
 
   const resumeSolver = () => {
     if (!isSolving || !isPaused) return;
 
     isPausedRef.current = false;
-
     setIsPaused(false);
-
     setSolverStatus("Solving...");
   };
-
-  /* ---------------- STOP ---------------- */
 
   const stopSolver = () => {
     if (!isSolving) return;
 
     stopRequested.current = true;
-
     isPausedRef.current = false;
 
     setIsPaused(false);
     setIsSolving(false);
-
     setSolverStatus("Solver stopped");
   };
-
-  /* ---------------- INITIAL PUZZLE ---------------- */
 
   useEffect(() => {
     const initialPuzzle = generatePuzzle(
@@ -412,104 +349,121 @@ function App() {
       ? (solveStep / totalSolveSteps) * 100
       : 0;
 
-  /* ---------------- UI ---------------- */
-
   return (
     <div className="app">
+      <div className="background-glow glow-one" />
+      <div className="background-glow glow-two" />
 
-      <div className="game-container">
+      <main className="game-container">
 
         {/* HEADER */}
+        <header className="hero">
+          <div className="hero-top">
+            <div className="ai-badge">
+              <span className="pulse-dot" />
+              AI SEARCH LAB
+            </div>
 
-        <header className="header">
-
-          <div className="header-badge">
-            AI SEARCH ALGORITHM
+            <button
+              className="help-button"
+              onClick={() => setShowHelp(!showHelp)}
+            >
+              ?
+            </button>
           </div>
 
-          <h1>8-Puzzle BFS</h1>
+          <h1>
+            8-Puzzle
+            <span>BFS Solver</span>
+          </h1>
 
           <p>
-            Interactive Breadth-First Search
-            Puzzle Solver
+            Solve the classic sliding puzzle manually
+            or watch Breadth-First Search find the
+            shortest solution.
           </p>
-
         </header>
 
-        {/* TOP STATUS */}
+        {/* HELP */}
+        {showHelp && (
+          <section className="help-panel">
+            <div className="help-icon">💡</div>
 
-        <section className="status-banner">
+            <div>
+              <strong>How to play</strong>
+              <p>
+                Click a tile next to the empty space
+                to move it. Arrange the numbers from
+                1 to 8 in order.
+              </p>
+            </div>
 
-          <div className="status-left">
+            <button
+              onClick={() => setShowHelp(false)}
+            >
+              ×
+            </button>
+          </section>
+        )}
 
-            <div className="status-icon">
-              🧠
+        {/* STATUS */}
+        <section className="status-card">
+          <div className="status-main">
+            <div className="status-orb">
+              {isSolving ? "🧠" : isSolved ? "🏆" : "🎮"}
             </div>
 
             <div>
-              <span className="status-label">
-                SOLVER STATUS
+              <span className="mini-label">
+                CURRENT STATUS
               </span>
 
-              <strong>
-                {solverStatus}
-              </strong>
+              <h3>{solverStatus}</h3>
             </div>
-
           </div>
 
-          <div className="status-right">
-
-            <span
-              className={`status-dot ${
-                isSolving
-                  ? "active"
-                  : isSolved
-                  ? "success"
-                  : ""
-              }`}
-            />
-
+          <div
+            className={`live-status ${
+              isSolving
+                ? "running"
+                : isSolved
+                ? "complete"
+                : ""
+            }`}
+          >
+            <span />
             {isSolving
-              ? "AI Running"
+              ? "AI ACTIVE"
               : isSolved
-              ? "Completed"
-              : "Ready"}
-
+              ? "COMPLETED"
+              : "READY"}
           </div>
-
         </section>
 
         {/* DIFFICULTY */}
-
-        <section className="difficulty-section">
-
-          <div className="section-heading">
-
+        <section className="section-card difficulty-card">
+          <div className="section-header">
             <div>
-              <span className="section-label">
-                GAME MODE
+              <span className="mini-label">
+                GAME SETTINGS
               </span>
 
-              <h2>Select Difficulty</h2>
+              <h2>Choose your challenge</h2>
             </div>
 
-            <span className="difficulty-current">
+            <span className="selected-badge">
               {difficulty}
             </span>
-
           </div>
 
-          <div className="difficulty-buttons">
-
-            {Object.keys(DIFFICULTIES).map(
-              (level) => (
-
+          <div className="difficulty-grid">
+            {Object.entries(DIFFICULTIES).map(
+              ([level, data]) => (
                 <button
                   key={level}
-                  className={`difficulty-button ${
+                  className={`difficulty-option ${
                     difficulty === level
-                      ? "active"
+                      ? "selected"
                       : ""
                   }`}
                   onClick={() =>
@@ -517,419 +471,416 @@ function App() {
                   }
                   disabled={isSolving}
                 >
-                  {level}
-                </button>
+                  <span className="difficulty-icon">
+                    {data.icon}
+                  </span>
 
+                  <span className="difficulty-info">
+                    <strong>{level}</strong>
+                    <small>{data.description}</small>
+                  </span>
+
+                  {difficulty === level && (
+                    <span className="check-mark">
+                      ✓
+                    </span>
+                  )}
+                </button>
               )
             )}
-
           </div>
-
-          <p className="difficulty-description">
-            {DIFFICULTIES[difficulty].description}
-          </p>
-
         </section>
 
-        {/* GAME DASHBOARD */}
-
-        <section className="dashboard">
-
-          <div className="dashboard-card">
-
-            <div className="dashboard-icon">
-              🔢
-            </div>
+        {/* STATS */}
+        <section className="top-stats">
+          <div className="stat-card">
+            <div className="stat-icon blue">↗</div>
 
             <div>
-              <span>PLAYER MOVES</span>
+              <span>YOUR MOVES</span>
               <strong>{moves}</strong>
             </div>
-
           </div>
 
-          <div className="dashboard-card">
-
-            <div className="dashboard-icon">
-              ⏱️
-            </div>
+          <div className="stat-card">
+            <div className="stat-icon purple">◷</div>
 
             <div>
-              <span>GAME TIME</span>
-              <strong>
-                {formatTime(time)}
-              </strong>
+              <span>TIME</span>
+              <strong>{formatTime(time)}</strong>
             </div>
-
           </div>
 
-          <div className="dashboard-card">
-
-            <div className="dashboard-icon">
-              🎯
-            </div>
+          <div className="stat-card">
+            <div className="stat-icon green">◎</div>
 
             <div>
-              <span>AI DEPTH</span>
+              <span>BFS DEPTH</span>
               <strong>
-                {bfsStats.solutionDepth}
+                {bfsStats.solutionDepth || "—"}
               </strong>
             </div>
-
           </div>
-
         </section>
 
         {/* MAIN GAME */}
+        <section className="section-card game-card">
 
-        <section className="game-area">
-
-          <div className="game-title">
-
+          <div className="game-header">
             <div>
-              <span className="section-label">
+              <span className="mini-label">
                 PUZZLE BOARD
               </span>
 
-              <h2>
-                Arrange numbers 1–8
-              </h2>
+              <h2>Arrange the tiles</h2>
             </div>
 
-            <div className="goal-state">
-              Goal: 1 2 3 / 4 5 6 / 7 8
+            <div className="goal-chip">
+              <span>GOAL</span>
+              <strong>1 2 3 · 4 5 6 · 7 8</strong>
             </div>
-
           </div>
 
-          <div className="puzzle-board">
+          {/* BOARD */}
+          <div
+            className={`board-wrapper ${
+              isSolving ? "ai-solving" : ""
+            } ${isSolved ? "solved-board" : ""}`}
+          >
+            <div className="board-glow" />
 
-            {puzzle.map((value, index) => (
-
-              <button
-                key={index}
-                className={`tile ${
-                  value === 0 ? "empty" : ""
-                }`}
-                onClick={() => moveTile(index)}
-                disabled={
-                  isSolving || value === 0
-                }
-              >
-                {value !== 0 ? value : ""}
-              </button>
-
-            ))}
-
+            <div className="puzzle-board">
+              {puzzle.map((value, index) => (
+                <button
+                  key={index}
+                  className={`tile ${
+                    value === 0 ? "empty" : ""
+                  }`}
+                  onClick={() => moveTile(index)}
+                  disabled={
+                    isSolving || value === 0
+                  }
+                >
+                  {value !== 0 && (
+                    <>
+                      <span className="tile-number">
+                        {value}
+                      </span>
+                      <span className="tile-shine" />
+                    </>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* SOLVING PROGRESS */}
-
           {isSolving && (
-
-            <div className="solver-progress">
-
-              <div className="solver-progress-header">
-
+            <div className="progress-card">
+              <div className="progress-top">
                 <div>
-                  <span>
-                    🧠 BFS SOLVING
+                  <span className="ai-running">
+                    🧠 BFS SEARCH RUNNING
                   </span>
 
                   <strong>
-                    Step {solveStep} /{" "}
+                    Step {solveStep} of{" "}
                     {totalSolveSteps}
                   </strong>
                 </div>
 
-                <strong>
+                <span className="progress-percent">
                   {Math.round(progress)}%
-                </strong>
-
+                </span>
               </div>
 
-              <div className="progress-container">
-
+              <div className="progress-track">
                 <div
-                  className="progress-bar"
+                  className="progress-fill"
                   style={{
                     width: `${progress}%`,
                   }}
                 />
-
               </div>
 
               <p>
-                BFS explores the puzzle state
-                space level by level.
+                Exploring puzzle states level by
+                level to find the shortest path.
               </p>
-
             </div>
-
           )}
 
           {/* SOLVER CONTROLS */}
-
           {isSolving && (
-
             <div className="solver-controls">
-
               {!isPaused ? (
-
                 <button
-                  className="pause-button"
+                  className="control pause"
                   onClick={pauseSolver}
                 >
                   ⏸ Pause
                 </button>
-
               ) : (
-
                 <button
-                  className="resume-button"
+                  className="control resume"
                   onClick={resumeSolver}
                 >
                   ▶ Resume
                 </button>
-
               )}
 
               <button
-                className="stop-button"
+                className="control stop"
                 onClick={stopSolver}
               >
-                ⏹ Stop
+                ■ Stop
               </button>
-
             </div>
-
           )}
 
           {/* SUCCESS */}
-
           {isSolved && !isSolving && (
-
-            <div className="success-message">
-
-              <span>🎉</span>
-
-              <div>
-                <strong>
-                  Puzzle Solved!
-                </strong>
-
-                <small>
-                  Shortest path found by BFS
-                </small>
+            <div className="success-card">
+              <div className="success-icon">
+                🏆
               </div>
 
-            </div>
+              <div>
+                <strong>Puzzle Solved!</strong>
 
+                <p>
+                  You reached the goal state
+                  {bfsStats.solutionDepth > 0
+                    ? ` in ${bfsStats.solutionDepth} BFS moves.`
+                    : "."}
+                </p>
+              </div>
+
+              <div className="success-check">
+                ✓
+              </div>
+            </div>
           )}
 
-          {/* MAIN BUTTONS */}
-
-          <div className="controls">
-
+          {/* ACTIONS */}
+          <div className="action-buttons">
             <button
-              className="primary-button"
+              className="action secondary"
               onClick={shufflePuzzle}
               disabled={isSolving}
             >
-              🔀 Shuffle
+              <span>🔀</span>
+              New Puzzle
             </button>
 
             <button
-              className="secondary-button"
+              className="action ghost"
               onClick={resetGame}
               disabled={isSolving}
             >
-              🔄 Reset
+              <span>↻</span>
+              Reset
             </button>
 
             <button
-              className="solve-button"
+              className="action primary"
               onClick={solvePuzzle}
               disabled={isSolving || isSolved}
             >
-              🧠 Solve with BFS
+              <span>🧠</span>
+              Solve with BFS
             </button>
-
           </div>
 
+          <div className="tip">
+            <span>💡</span>
+            <p>
+              Tip: Try solving it yourself first,
+              then use BFS to compare your solution.
+            </p>
+          </div>
         </section>
 
-        {/* BFS ANALYTICS */}
+        {/* ANALYTICS */}
+        <section className="section-card analytics-card-section">
 
-        <section className="analytics-section">
-
-          <div className="section-heading">
-
+          <div className="section-header">
             <div>
-              <span className="section-label">
-                PERFORMANCE
+              <span className="mini-label">
+                ALGORITHM PERFORMANCE
               </span>
 
               <h2>BFS Analytics</h2>
             </div>
 
-            <span className="algorithm-tag">
+            <div className="algorithm-pill">
               BFS
-            </span>
-
+            </div>
           </div>
 
           <div className="analytics-grid">
 
-            <div className="analytics-card">
-
-              <span>🔍</span>
+            <div className="analytics-item">
+              <div className="analytics-icon">
+                🔍
+              </div>
 
               <div>
-                <small>
-                  NODES EXPLORED
-                </small>
-
+                <span>NODES EXPLORED</span>
                 <strong>
                   {bfsStats.nodesExplored}
                 </strong>
+                <small>
+                  States examined by BFS
+                </small>
               </div>
-
             </div>
 
-            <div className="analytics-card">
-
-              <span>🌐</span>
+            <div className="analytics-item">
+              <div className="analytics-icon">
+                🌐
+              </div>
 
               <div>
-                <small>
-                  STATES GENERATED
-                </small>
-
+                <span>STATES GENERATED</span>
                 <strong>
                   {bfsStats.statesGenerated}
                 </strong>
+                <small>
+                  Possible states created
+                </small>
               </div>
-
             </div>
 
-            <div className="analytics-card">
-
-              <span>📏</span>
+            <div className="analytics-item">
+              <div className="analytics-icon">
+                📏
+              </div>
 
               <div>
-                <small>
-                  SOLUTION DEPTH
-                </small>
-
+                <span>SOLUTION DEPTH</span>
                 <strong>
                   {bfsStats.solutionDepth}
                 </strong>
+                <small>
+                  Minimum BFS moves
+                </small>
               </div>
-
             </div>
 
-            <div className="analytics-card">
-
-              <span>⚡</span>
+            <div className="analytics-item">
+              <div className="analytics-icon">
+                ⚡
+              </div>
 
               <div>
-                <small>
-                  EXECUTION TIME
-                </small>
-
+                <span>EXECUTION TIME</span>
                 <strong>
                   {bfsStats.executionTime.toFixed(2)}
-                  <small className="unit">
+                  <small className="ms">
                     ms
                   </small>
                 </strong>
+                <small>
+                  Solver computation time
+                </small>
               </div>
-
             </div>
 
           </div>
-
         </section>
 
-        {/* BFS EXPLANATION */}
+        {/* HOW BFS WORKS */}
+        <section className="section-card education-card">
 
-        <section className="info-section">
-
-          <div className="section-heading">
-
+          <div className="section-header">
             <div>
-              <span className="section-label">
-                ARTIFICIAL INTELLIGENCE
+              <span className="mini-label">
+                LEARN THE ALGORITHM
               </span>
 
-              <h2>How BFS Works</h2>
+              <h2>How does BFS solve it?</h2>
             </div>
 
+            <div className="book-icon">
+              🧠
+            </div>
           </div>
 
-          <p>
-            Breadth-First Search explores all states
-            at the current depth before moving to
-            deeper states. Since every puzzle move
-            has the same cost, the first solution
-            found by BFS is guaranteed to contain
-            the minimum number of moves.
+          <p className="education-text">
+            Breadth-First Search explores the puzzle
+            state space level by level. Because every
+            tile movement has the same cost, the first
+            solution BFS finds contains the minimum
+            number of moves.
           </p>
 
-          <div className="bfs-flow">
+          <div className="bfs-steps">
 
-            <div>
+            <div className="bfs-step">
               <span>01</span>
-              Initial State
+              <strong>Start</strong>
+              <small>
+                Current puzzle
+              </small>
             </div>
 
-            <span>→</span>
+            <div className="step-arrow">→</div>
 
-            <div>
+            <div className="bfs-step">
               <span>02</span>
-              Queue
+              <strong>Queue</strong>
+              <small>
+                Add state
+              </small>
             </div>
 
-            <span>→</span>
+            <div className="step-arrow">→</div>
 
-            <div>
+            <div className="bfs-step">
               <span>03</span>
-              Explore
+              <strong>Explore</strong>
+              <small>
+                Check state
+              </small>
             </div>
 
-            <span>→</span>
+            <div className="step-arrow">→</div>
 
-            <div>
+            <div className="bfs-step">
               <span>04</span>
-              Generate
+              <strong>Generate</strong>
+              <small>
+                Create moves
+              </small>
             </div>
 
-            <span>→</span>
+            <div className="step-arrow">→</div>
 
-            <div>
+            <div className="bfs-step goal-step">
               <span>05</span>
-              Goal
+              <strong>Goal</strong>
+              <small>
+                Solution found
+              </small>
             </div>
 
           </div>
-
         </section>
 
         {/* FOOTER */}
-
         <footer className="footer">
+          <div>
+            <strong>8-Puzzle BFS</strong>
+            <span>AI Search Algorithm Demonstration</span>
+          </div>
 
-          <strong>8-Puzzle BFS AI</strong>
-
-          <span>
-            React • JavaScript • Breadth-First Search
-          </span>
-
+          <div>
+            React • JavaScript • BFS
+          </div>
         </footer>
 
-      </div>
-
+      </main>
     </div>
   );
 }
