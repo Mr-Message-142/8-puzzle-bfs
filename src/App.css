@@ -169,9 +169,13 @@ button {
 
 .solver-progress {
   background: white;
+
   padding: 20px;
+
   border-radius: 14px;
+
   margin: 20px auto;
+
   max-width: 700px;
 
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
@@ -179,18 +183,23 @@ button {
 
 .solver-title {
   display: flex;
+
   justify-content: space-between;
+
   align-items: center;
 
   font-weight: bold;
+
   margin-bottom: 15px;
 }
 
 .progress-container {
   width: 100%;
+
   height: 14px;
 
   background: #e5e7eb;
+
   border-radius: 20px;
 
   overflow: hidden;
@@ -198,6 +207,7 @@ button {
 
 .progress-bar {
   height: 100%;
+
   background: #2563eb;
 
   border-radius: 20px;
@@ -207,43 +217,123 @@ button {
 
 .solver-details {
   display: flex;
+
   justify-content: space-between;
 
   margin-top: 10px;
 
   color: #666;
+
   font-size: 14px;
 }
 
-/* Status */
+/* Solver controls */
+
+.solver-controls {
+  display: flex;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  margin: 20px 0;
+}
+
+.solver-controls button {
+  border: none;
+
+  padding: 12px 25px;
+
+  border-radius: 9px;
+
+  font-size: 15px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.solver-controls button:hover {
+  transform: translateY(-2px);
+}
+
+.pause-button {
+  background: #f59e0b;
+
+  color: white;
+}
+
+.resume-button {
+  background: #16a34a;
+
+  color: white;
+}
+
+.stop-button {
+  background: #dc2626;
+
+  color: white;
+}
+
+/* Messages */
 
 .success-message {
   text-align: center;
+
   font-size: 20px;
+
   font-weight: bold;
+
   margin: 20px;
 
   color: #16a34a;
 }
 
-/* Controls */
+.stopped-message {
+  text-align: center;
+
+  background: #fff7ed;
+
+  color: #c2410c;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+  margin: 15px auto;
+
+  max-width: 600px;
+
+  font-weight: bold;
+}
+
+/* Main controls */
 
 .controls {
   display: flex;
+
   justify-content: center;
+
   flex-wrap: wrap;
+
   gap: 12px;
+
   margin: 25px 0;
 }
 
 .controls button {
   border: none;
+
   padding: 12px 20px;
+
   border-radius: 9px;
 
   cursor: pointer;
 
   font-size: 15px;
+
   font-weight: bold;
 
   transition: 0.2s;
@@ -251,16 +341,19 @@ button {
 
 .primary-button {
   background: #2563eb;
+
   color: white;
 }
 
 .secondary-button {
   background: #e5e7eb;
+
   color: #111827;
 }
 
 .solve-button {
   background: #16a34a;
+
   color: white;
 }
 
@@ -270,6 +363,7 @@ button {
 
 .controls button:disabled {
   opacity: 0.5;
+
   cursor: not-allowed;
 }
 
@@ -286,13 +380,17 @@ button {
 
 .bfs-stats {
   display: grid;
+
   grid-template-columns: repeat(4, 1fr);
+
   gap: 15px;
 }
 
 .stat-card {
   background: white;
+
   padding: 20px 10px;
+
   border-radius: 12px;
 
   text-align: center;
@@ -304,6 +402,7 @@ button {
   display: block;
 
   font-size: 13px;
+
   color: #777;
 
   margin-bottom: 10px;
@@ -329,6 +428,7 @@ button {
 
 .info-section p {
   line-height: 1.7;
+
   color: #555;
 }
 
@@ -336,6 +436,7 @@ button {
   display: flex;
 
   justify-content: center;
+
   align-items: center;
 
   flex-wrap: wrap;
@@ -389,6 +490,15 @@ button {
 
   .solver-title {
     flex-direction: column;
+
     gap: 8px;
+  }
+
+  .solver-controls {
+    flex-direction: column;
+  }
+
+  .solver-controls button {
+    width: 100%;
   }
 }
